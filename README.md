@@ -5,7 +5,7 @@ This project aims to provide a reusable GridView widget which can add a footer f
 Features
 --------
 * Flexible cell size
-* Footer View addable
+* Footer-View addable
 
 Repository at [https://github.com/nagoya0/FooterGridViewSpecial](https://github.com/nagoya0/FooterGridViewSpecial)
 
@@ -15,5 +15,6 @@ stub.
 
 License
 -------
-Copyright (C) 2012 Nagoya0
+Copyright &copy; 2012 Nagoya0
+
 Licensed under the [Apache License, Version 2.0](http://www.apache.org/licenses/LICENSE-2.0)
