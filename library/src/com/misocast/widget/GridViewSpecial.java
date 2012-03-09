@@ -44,7 +44,7 @@ import java.util.HashMap;
 
 import com.misocast.library.R;
 
-class GridViewSpecial extends ViewGroup {
+public class GridViewSpecial extends ViewGroup {
     @SuppressWarnings("unused")
     private static final String TAG = "GridViewSpecial";
     private static final float MAX_FLING_VELOCITY = 2500;
