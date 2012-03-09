@@ -726,8 +726,10 @@ public class GridViewSpecial extends ViewGroup {
 
     private final Runnable mLongPressCallback = new Runnable() {
         public void run() {
-            mCurrentPressState &= ~CLICKING_FLAG;
-            showContextMenu();
+            if((mCurrentPressState & CLICKING_FLAG) != 0) {
+                mCurrentPressState &= ~CLICKING_FLAG;
+                showContextMenu();
+            }
         }
     };
 
@@ -841,17 +843,19 @@ public class GridViewSpecial extends ViewGroup {
         if (!canHandleEvent()) return false;
 
         if (keyCode == KeyEvent.KEYCODE_DPAD_CENTER) {
-            mCurrentPressState &= ~CLICKING_FLAG;
-            invalidate();
+            if((mCurrentPressState & CLICKING_FLAG) != 0) {
+                mCurrentPressState &= ~CLICKING_FLAG;
+                invalidate();
 
-            // The keyUp doesn't get called when the longpress menu comes up. We
-            // only get here when the user lets go of the center key before the
-            // longpress menu comes up.
-            mHandler.removeCallbacks(mLongPressCallback);
+                // The keyUp doesn't get called when the longpress menu comes up. We
+                // only get here when the user lets go of the center key before the
+                // longpress menu comes up.
+                mHandler.removeCallbacks(mLongPressCallback);
 
-            // open the photo
-            mListener.onImageClicked(mCurrentSelection);
-            return true;
+                // open the photo
+                mListener.onImageClicked(mCurrentSelection);
+                return true;
+            }
         }
         return super.onKeyUp(keyCode, event);
     }
