@@ -116,7 +116,7 @@ public class GridViewSpecial extends ViewGroup {
     private ImageLoader mLoader;
     private Listener mListener = null;
     private DrawAdapter mDrawAdapter = null;
-    private ArrayList<GridItem> mAllImages;
+    private ArrayList<? extends GridItem> mAllImages;
     private int mSizeChoice = 1;  // default is big cell size
 
     // These are set in onLayout().
@@ -188,7 +188,7 @@ public class GridViewSpecial extends ViewGroup {
         mDrawAdapter = adapter;
     }
 
-    public void setImageList(ArrayList<GridItem> list) {
+    public void setImageList(ArrayList<? extends GridItem> list) {
 //        Assert(mRunning == false);
         mAllImages = list;
         mCount = mAllImages.size();
@@ -929,7 +929,7 @@ class ImageBlockManager {
     private final Runnable mRedrawCallback;  // Called after a row is loaded,
                                              // so GridViewSpecial can draw
                                              // again using the new images.
-    private final ArrayList<GridItem> mImageList;
+    private final ArrayList<? extends GridItem> mImageList;
     private final ImageLoader mLoader;
     private final GridViewSpecial.DrawAdapter mDrawAdapter;
     private final GridViewSpecial.LayoutSpec mSpec;
@@ -946,7 +946,7 @@ class ImageBlockManager {
     private int mEndRow = 0;
 
     ImageBlockManager(Handler handler, Runnable redrawCallback,
-            ArrayList<GridItem> imageList, ImageLoader loader,
+            ArrayList<? extends GridItem> imageList, ImageLoader loader,
             GridViewSpecial.DrawAdapter adapter,
             GridViewSpecial.LayoutSpec spec,
             int columns, int blockWidth, Bitmap outline) {
