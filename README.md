@@ -1,7 +1,7 @@
 FooterGridViewSpecial
 =====================
 This project aims to provide a reusable GridView widget which can add a footer for Android. It is originally based on a part of AOSP gallery app.
-![picture not found](./ss00.png "Screenshot")
+![picture not found](https://github.com/nagoya0/FooterGridViewSpecial/raw/master/ss00.png "Screenshot")
 
 Features
 --------
