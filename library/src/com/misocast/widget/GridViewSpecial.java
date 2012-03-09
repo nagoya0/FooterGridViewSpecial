@@ -17,11 +17,14 @@
 
 package com.misocast.widget;
 
+import static com.misocast.widget.Util.Assert;
+
 import android.app.Activity;
 import android.content.Context;
 import android.content.res.TypedArray;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
+import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Rect;
 import android.graphics.drawable.Drawable;
@@ -101,7 +104,16 @@ public class GridViewSpecial extends ViewGroup {
         mCellSizeChoices = new LayoutSpec[] {
             new LayoutSpec(67, 67, 8, 0, metrics),
             new LayoutSpec(92, 92, 8, 0, metrics),
+            null,
         };
+    }
+
+    public void setLayoutSpec(int width, int spacing) {
+        Activity a = (Activity) getContext();
+        DisplayMetrics metrics = new DisplayMetrics();
+        a.getWindowManager().getDefaultDisplay().getMetrics(metrics);
+        mCellSizeChoices[2] = new LayoutSpec(width, width, spacing, 0, metrics);
+        mSizeChoice = 2;
     }
 
     // Converts dp to pixel.
@@ -120,6 +132,9 @@ public class GridViewSpecial extends ViewGroup {
     private DrawAdapter mDrawAdapter = null;
     private ArrayList<? extends GridItem> mAllImages;
     private int mSizeChoice = 1;  // default is big cell size
+    private boolean mFlexWidth = false;
+    private boolean mDrawEmptyStateOutline = true;
+    private int mItemBackgroundColor = Color.rgb(0xDD, 0xDD, 0xDD);
 
     // These are set in onLayout().
     private LayoutSpec mSpec;
@@ -179,30 +194,42 @@ public class GridViewSpecial extends ViewGroup {
             };
 
     public void setLoader(ImageLoader loader) {
-//        Assert(mRunning == false);
+        Assert(mRunning == false);
         mLoader = loader;
     }
 
     public void setListener(Listener listener) {
-//        Assert(mRunning == false);
+        Assert(mRunning == false);
         mListener = listener;
     }
 
     public void setDrawAdapter(DrawAdapter adapter) {
-//        Assert(mRunning == false);
+        Assert(mRunning == false);
         mDrawAdapter = adapter;
     }
 
     public void setImageList(ArrayList<? extends GridItem> list) {
-//        Assert(mRunning == false);
+        Assert(mRunning == false);
         mAllImages = list;
         mCount = mAllImages.size();
     }
 
     public void setSizeChoice(int choice) {
-//        Assert(mRunning == false);
+        Assert(mRunning == false);
         if (mSizeChoice == choice) return;
         mSizeChoice = choice;
+    }
+
+    public void setFlexWidth(boolean bool) {
+        mFlexWidth = bool;
+    }
+
+    public void setDrawEmptyStateOutline(boolean bool) {
+        mDrawEmptyStateOutline = bool;
+    }
+
+    public void setItemBackgroundColor(int color) {
+        mItemBackgroundColor = color;
     }
 
     @Override
@@ -254,8 +281,10 @@ public class GridViewSpecial extends ViewGroup {
         int childWidthMeasureSpec = 0;
         int childHeightMeasureSpec = 0;
         LayoutParams params = child.getLayoutParams();
-        childWidthMeasureSpec = getChildMeasureSpec(MeasureSpec.AT_MOST | getWidth(), getPaddingLeft() + getPaddingRight(), params.width);
-        childHeightMeasureSpec = getChildMeasureSpec(MeasureSpec.UNSPECIFIED, getPaddingTop() + getPaddingBottom(), params.height);
+        childWidthMeasureSpec = getChildMeasureSpec(MeasureSpec.AT_MOST | getWidth(),
+                getPaddingLeft() + getPaddingRight(), params.width);
+        childHeightMeasureSpec = getChildMeasureSpec(MeasureSpec.UNSPECIFIED,
+                getPaddingTop() + getPaddingBottom(), params.height);
         child.measure(childWidthMeasureSpec, childHeightMeasureSpec);
     }
 
@@ -286,6 +315,10 @@ public class GridViewSpecial extends ViewGroup {
         mColumns = 1 + (width - mSpec.mCellWidth)
                 / (mSpec.mCellWidth + mSpec.mCellSpacing);
 
+        if(mFlexWidth) {
+            mSpec.mCellWidth = mSpec.mCellHeight = (width
+                    - ((mColumns + 1) * mSpec.mCellSpacing)) / mColumns;
+        }
         mSpec.mLeftEdgePadding = (width
                 - ((mColumns - 1) * mSpec.mCellSpacing)
                 - (mColumns * mSpec.mCellWidth)) / 2;
@@ -328,7 +361,7 @@ public class GridViewSpecial extends ViewGroup {
 
         mImageBlockManager = new ImageBlockManager(mHandler, mRedrawCallback,
                 mAllImages, mLoader, mDrawAdapter, mSpec, mColumns, width,
-                mOutline[OUTLINE_EMPTY]);
+                mOutline[OUTLINE_EMPTY], mDrawEmptyStateOutline, mItemBackgroundColor);
         findFirstFocusableDescendant();
 
         mListener.onLayoutComplete(changed);
@@ -589,9 +622,9 @@ public class GridViewSpecial extends ViewGroup {
 
     public void start() {
         // These must be set before start().
-//        Assert(mLoader != null);
-//        Assert(mListener != null);
-//        Assert(mDrawAdapter != null);
+        Assert(mLoader != null);
+        Assert(mListener != null);
+        Assert(mDrawAdapter != null);
         mRunning = true;
         requestLayout();
     }
@@ -1006,6 +1039,7 @@ class ImageBlockManager {
     private final int mBlockWidth;  // The width of an ImageBlock.
     private final Bitmap mOutline;  // The outline bitmap put on top of each
                                     // image.
+    private final boolean mDrawEmptyStateOutline;
     private final int mCount;  // Cache mImageList.getCount().
     private final int mRows;  // Cache (mCount + mColumns - 1) / mColumns
     private final int mBlockHeight;  // The height of an ImageBlock.
@@ -1014,11 +1048,14 @@ class ImageBlockManager {
     private int mStartRow = 0;
     private int mEndRow = 0;
 
+    private int mItemBackgroundColor;
+
     ImageBlockManager(Handler handler, Runnable redrawCallback,
             ArrayList<? extends GridItem> imageList, ImageLoader loader,
             GridViewSpecial.DrawAdapter adapter,
             GridViewSpecial.LayoutSpec spec,
-            int columns, int blockWidth, Bitmap outline) {
+            int columns, int blockWidth, Bitmap outline,
+            boolean drawEmptyStateOutline, int itemBackgroundColor) {
         mHandler = handler;
         mRedrawCallback = redrawCallback;
         mImageList = imageList;
@@ -1028,9 +1065,11 @@ class ImageBlockManager {
         mColumns = columns;
         mBlockWidth = blockWidth;
         mOutline = outline;
+        mDrawEmptyStateOutline = drawEmptyStateOutline;
         mBlockHeight = mSpec.mCellSpacing + mSpec.mCellHeight;
         mCount = imageList.size();
         mRows = (mCount + mColumns - 1) / mColumns;
+        mItemBackgroundColor = itemBackgroundColor;
         mCache = new HashMap<Integer, ImageBlock>();
         mPendingRequest = 0;
         initGraphics();
@@ -1067,7 +1106,7 @@ class ImageBlockManager {
             int row = pos / mColumns;
             int col = pos - row * mColumns;
             ImageBlock blk = mCache.get(row);
-//            Assert(blk != null);  // We won't reuse the block if it has pending
+            Assert(blk != null);  // We won't reuse the block if it has pending
                                   // requests. See getEmptyBlock().
             blk.cancelRequest(col);
         }
@@ -1105,7 +1144,7 @@ class ImageBlockManager {
 
     // Returns number of requests we issued for this row.
     private int tryToLoad(int row) {
-//        Assert(row >= 0 && row < mRows);
+        Assert(row >= 0 && row < mRows);
         ImageBlock blk = mCache.get(row);
         if (blk == null) {
             // Find an empty block
@@ -1229,12 +1268,14 @@ class ImageBlockManager {
     private void initGraphics() {
         mBackgroundPaint = new Paint();
         mBackgroundPaint.setStyle(Paint.Style.FILL);
-        mBackgroundPaint.setColor(0xFF000000);  // black
+        mBackgroundPaint.setColor(0x00000000);  // transparent
         mEmptyBitmap = Bitmap.createBitmap(mSpec.mCellWidth, mSpec.mCellHeight,
-                Bitmap.Config.RGB_565);
+                Bitmap.Config.ARGB_8888);
         Canvas canvas = new Canvas(mEmptyBitmap);
-        canvas.drawRGB(0xDD, 0xDD, 0xDD);
-        canvas.drawBitmap(mOutline, 0, 0, null);
+        canvas.drawColor(mItemBackgroundColor);
+        if(mDrawEmptyStateOutline) {
+            canvas.drawBitmap(mOutline, 0, 0, null);
+        }
     }
 
     // ImageBlock stores bitmap for one row. The loaded thumbnail images are
@@ -1254,8 +1295,9 @@ class ImageBlockManager {
 
         public ImageBlock() {
             mBitmap = Bitmap.createBitmap(mBlockWidth, mBlockHeight,
-                    Bitmap.Config.RGB_565);
+                    Bitmap.Config.ARGB_8888);
             mCanvas = new Canvas(mBitmap);
+            mCanvas.drawPaint(mBackgroundPaint);
             mRow = -1;
         }
 
@@ -1283,7 +1325,7 @@ class ImageBlockManager {
 
         // Returns number of requests submitted to ImageLoader.
         public int loadImages() {
-//            Assert(mRow != -1);
+            Assert(mRow != -1);
 
             int columns = numColumns(mRow);
 
@@ -1356,8 +1398,8 @@ class ImageBlockManager {
             }
 
             int mask = (1 << col);
-//            Assert((mCompletedMask & mask) == 0);
-//            Assert((mRequestedMask & mask) != 0);
+            Assert((mCompletedMask & mask) == 0);
+            Assert((mRequestedMask & mask) != 0);
             mRequestedMask &= ~mask;
             mCompletedMask |= mask;
             mPendingRequest--;
@@ -1373,9 +1415,12 @@ class ImageBlockManager {
         // Draw the loaded bitmap to the block bitmap.
         private void drawBitmap(
                 GridItem image, Bitmap b, int xPos, int yPos) {
+            mCanvas.drawBitmap(mEmptyBitmap, xPos, yPos, null);
             mDrawAdapter.drawImage(mCanvas, image, b, xPos, yPos,
                     mSpec.mCellWidth, mSpec.mCellHeight);
-            mCanvas.drawBitmap(mOutline, xPos, yPos, null);
+            if(mDrawEmptyStateOutline) {
+                mCanvas.drawBitmap(mOutline, xPos, yPos, null);
+            }
         }
 
         // Draw the block bitmap to the specified canvas.
@@ -1419,7 +1464,7 @@ class ImageBlockManager {
         // from the queue of ImageLoader, so we only need to mark the fact.
         public void cancelRequest(int col) {
             int mask = (1 << col);
-//            Assert((mRequestedMask & mask) != 0);
+            Assert((mRequestedMask & mask) != 0);
             mRequestedMask &= ~mask;
             mPendingRequest--;
         }
