@@ -21,7 +21,6 @@ import java.util.ArrayList;
 
 import com.misocast.widget.GridItem;
 import com.misocast.widget.GridViewSpecial;
-import com.misocast.widget.ImageLoader;
 
 import android.app.Activity;
 import android.graphics.Bitmap;
@@ -30,7 +29,6 @@ import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.Rect;
 import android.os.Bundle;
-import android.os.Handler;
 import android.view.ContextMenu;
 import android.view.ContextMenu.ContextMenuInfo;
 import android.view.LayoutInflater;
@@ -42,9 +40,7 @@ public class FooterGridviewSampleActivity extends Activity implements
         GridViewSpecial.Listener {
     private ArrayList<UserData> mAllImages;
 
-    private final Handler mHandler = new Handler();
     private GridViewSpecialAdapter adapter;
-    private ImageLoader mLoader;
     private GridViewSpecial mGvs;
 
     /** Called when the activity is first created. */
@@ -56,8 +52,6 @@ public class FooterGridviewSampleActivity extends Activity implements
         adapter = new GridViewSpecialAdapter();
         mGvs = (GridViewSpecial) findViewById(R.id.grid);
         mGvs.setListener(this);
-
-        mLoader = new ImageLoader(getContentResolver(), mHandler);
 
         LayoutInflater inflator = getLayoutInflater();
         View footer1 = inflator.inflate(R.layout.footer1, null);
@@ -85,18 +79,16 @@ public class FooterGridviewSampleActivity extends Activity implements
     }
 
     public void refresh() {
-        mGvs.stop();
+        mGvs.stop(false);
         mGvs.setImageList(mAllImages);
         mGvs.setDrawAdapter(adapter);
-        mGvs.setLoader(mLoader);
         mGvs.start();
     }
 
     @Override
     protected void onPause() {
         super.onPause();
-        mLoader.stop();
-        mGvs.stop();
+        mGvs.stop(true);
     }
 
     @Override

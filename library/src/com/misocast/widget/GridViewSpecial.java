@@ -147,14 +147,16 @@ public class GridViewSpecial extends ViewGroup {
     }
 
     private void init(Context context) {
-        setWillNotDraw(false);
-        setVerticalScrollBarEnabled(true);
         final TypedArray a = context.obtainStyledAttributes(R.styleable.View);
         initializeScrollbars(a);
         a.recycle();
         mGestureDetector = new GestureDetector(context,
                 new MyGestureDetector());
+        mLoader = new ImageLoader(context.getContentResolver(),
+                new Handler());
         setFocusableInTouchMode(true);
+        setVerticalScrollBarEnabled(true);
+        setWillNotDraw(false);
         initCellSize();
         setOnFocusChangeListener(new View.OnFocusChangeListener() {
             @Override
@@ -598,7 +600,10 @@ public class GridViewSpecial extends ViewGroup {
     // mGvs.set...(...);
     // mGvs.set...(...);
     // mGvs.start();
-    public void stop() {
+    public void stop(boolean stopDecodeThread) {
+        if(stopDecodeThread) {
+            mLoader.stop();
+        }
         // Remove the long press callback from the queue if we are going to
         // stop.
         mHandler.removeCallbacks(mLongPressCallback);
