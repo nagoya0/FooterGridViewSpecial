@@ -44,6 +44,8 @@
         <attr name="android:tag" />
         <attr name="android:visibility" />
 <!-- 
+        <attr name="android:computeHorizontalScrollRange" />
+        <attr name="android:computeVerticalScrollRange" />
         <attr name="android:fadeScrollbars" />
         <attr name="android:scrollbarDefaultDelayBeforeFade" />
         <attr name="android:scrollbarFadeDuration" />
