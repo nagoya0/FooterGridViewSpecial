@@ -125,6 +125,7 @@ public class GridViewSpecial extends ViewGroup {
     private LayoutSpec mSpec;
     private int mColumns;
     private int mMaxScrollY;
+    private float mScrollPosition;
 
     // We can handle events only if onLayout() is completed.
     private boolean mLayoutComplete = false;
@@ -308,6 +309,7 @@ public class GridViewSpecial extends ViewGroup {
             footerStart += childHeight;
         }
         mMaxScrollY = footerStart - (bottom - top);
+        scrollTo(mScrollPosition);
 
         // Put mScrollY in the valid range. This matters if mMaxScrollY is
         // changed. For example, orientation changed from portrait to landscape.
@@ -615,7 +617,7 @@ public class GridViewSpecial extends ViewGroup {
             mImageBlockManager = null;
         }
         mRunning = false;
-        mCurrentSelection = INDEX_NONE;
+//        mCurrentSelection = INDEX_NONE;
     }
 
     @Override
@@ -721,6 +723,7 @@ public class GridViewSpecial extends ViewGroup {
     @Override
     public void scrollTo(int x, int y) {
         y = Math.max(0, Math.min(mMaxScrollY, y));
+        mScrollPosition = (float) y / mMaxScrollY;
         if (mSpec != null) {
             mListener.onScroll((float) getScrollY() / mMaxScrollY);
         }
@@ -930,8 +933,8 @@ public class GridViewSpecial extends ViewGroup {
             return;
         }
         SavedState ss = (SavedState)state;
-        scrollTo(ss.mScrollPosition);
-        setSelectedIndex(ss.mSelectedIndex);
+        mScrollPosition = ss.mScrollPosition;
+        mCurrentSelection = ss.mSelectedIndex;
         super.onRestoreInstanceState(ss.getSuperState());
     }
 
@@ -939,7 +942,7 @@ public class GridViewSpecial extends ViewGroup {
     protected Parcelable onSaveInstanceState() {
         Parcelable superState = super.onSaveInstanceState();
         SavedState ss = new SavedState(superState);
-        ss.mScrollPosition = (float) getScrollY() / mMaxScrollY;
+        ss.mScrollPosition = mScrollPosition;
         ss.mSelectedIndex = mCurrentSelection;
         return ss;
     }
