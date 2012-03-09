@@ -27,6 +27,8 @@ import android.graphics.Rect;
 import android.graphics.drawable.Drawable;
 import android.media.AudioManager;
 import android.os.Handler;
+import android.os.Parcel;
+import android.os.Parcelable;
 import android.util.AttributeSet;
 import android.util.DisplayMetrics;
 import android.view.GestureDetector;
@@ -919,6 +921,61 @@ public class GridViewSpecial extends ViewGroup {
             type = OUTLINE_PRESSED;
         }
         canvas.drawBitmap(mOutline[type], xPos, yTop, null);
+    }
+
+    @Override
+    protected void onRestoreInstanceState(Parcelable state) {
+        if(!(state instanceof SavedState)) {
+            super.onRestoreInstanceState(state);
+            return;
+        }
+        SavedState ss = (SavedState)state;
+        scrollTo(ss.mScrollPosition);
+        setSelectedIndex(ss.mSelectedIndex);
+        super.onRestoreInstanceState(ss.getSuperState());
+    }
+
+    @Override
+    protected Parcelable onSaveInstanceState() {
+        Parcelable superState = super.onSaveInstanceState();
+        SavedState ss = new SavedState(superState);
+        ss.mScrollPosition = (float) getScrollY() / mMaxScrollY;
+        ss.mSelectedIndex = mCurrentSelection;
+        return ss;
+    }
+
+    static class SavedState extends BaseSavedState {
+        private float mScrollPosition;
+        private int mSelectedIndex;
+
+        private SavedState(Parcel in) {
+            super(in);
+            mScrollPosition = in.readFloat();
+            mSelectedIndex = in.readInt();
+        }
+
+        SavedState(Parcelable superState) {
+            super(superState);
+        }
+
+        @Override
+        public void writeToParcel(Parcel dest, int flags) {
+            super.writeToParcel(dest, flags);
+            dest.writeFloat(mScrollPosition);
+            dest.writeInt(mSelectedIndex);
+        }
+
+        public static final Parcelable.Creator<SavedState> CREATOR =
+                new Parcelable.Creator<SavedState>() {
+                    @Override
+                    public SavedState createFromParcel(Parcel in) {
+                        return new SavedState(in);
+                    }
+
+                    @Override
+                    public SavedState[] newArray(int size) {
+                        return new SavedState[size];
+                    }};
     }
 }
 
