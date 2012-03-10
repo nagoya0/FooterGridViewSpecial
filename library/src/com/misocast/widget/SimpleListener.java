@@ -1,4 +1,5 @@
 /*
+ * Copyright (C) 2007 The Android Open Source Project
  * Copyright (C) 2012 Nagoya0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,13 +17,29 @@
 
 package com.misocast.widget;
 
-import android.graphics.Bitmap;
+import com.misocast.widget.GridViewSpecial.Listener;
 
 /**
  * @author Nagoya0
  *
  */
-public interface GridItem {
+public class SimpleListener implements Listener {
 
-    public Bitmap getBitmapInBackground(int pos);
+    @Override
+    public void onImageClicked(int index) {
+    }
+
+    @Override
+    public void onImageTapped(int index) {
+        onImageClicked(index);
+    }
+
+    @Override
+    public void onLayoutComplete(boolean changed) {
+    }
+
+    @Override
+    public void onScroll(float scrollPosition) {
+    }
+
 }
