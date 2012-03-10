@@ -84,15 +84,17 @@ public class GridViewSpecial extends ViewGroup {
     // in onLayout() for details.
     static class LayoutSpec {
         LayoutSpec(int w, int h, int intercellSpacing, int leftEdgePadding,
-                DisplayMetrics metrics) {
+                boolean paddingPriority, DisplayMetrics metrics) {
             mCellWidth = dpToPx(w, metrics);
             mCellHeight = dpToPx(h, metrics);
             mCellSpacing = dpToPx(intercellSpacing, metrics);
             mLeftEdgePadding = dpToPx(leftEdgePadding, metrics);
+            mPaddingPriority = paddingPriority;
         }
         int mCellWidth, mCellHeight;
         int mCellSpacing;
         int mLeftEdgePadding;
+        boolean mPaddingPriority;
     }
 
     private LayoutSpec [] mCellSizeChoices;
@@ -102,17 +104,32 @@ public class GridViewSpecial extends ViewGroup {
         DisplayMetrics metrics = new DisplayMetrics();
         a.getWindowManager().getDefaultDisplay().getMetrics(metrics);
         mCellSizeChoices = new LayoutSpec[] {
-            new LayoutSpec(67, 67, 8, 0, metrics),
-            new LayoutSpec(92, 92, 8, 0, metrics),
+            new LayoutSpec(67, 67, 8, 0, false, metrics),
+            new LayoutSpec(92, 92, 8, 0, false, metrics),
             null,
         };
     }
 
-    public void setLayoutSpec(int width, int spacing) {
+    public void setLayoutSpec(int cellSize, int spacing) {
+        setLayoutSpec(cellSize, spacing, false);
+    }
+
+    public void setLayoutSpec(int cellSize, int spacing,
+            boolean fitWidth) {
         Activity a = (Activity) getContext();
         DisplayMetrics metrics = new DisplayMetrics();
         a.getWindowManager().getDefaultDisplay().getMetrics(metrics);
-        mCellSizeChoices[2] = new LayoutSpec(width, width, spacing, 0, metrics);
+        mCellSizeChoices[2] = new LayoutSpec(cellSize, cellSize, spacing,
+                0, fitWidth, metrics);
+        mSizeChoice = 2;
+    }
+
+    public void setLayoutSpec(int width, int height, int spacing) {
+        Activity a = (Activity) getContext();
+        DisplayMetrics metrics = new DisplayMetrics();
+        a.getWindowManager().getDefaultDisplay().getMetrics(metrics);
+        mCellSizeChoices[2] = new LayoutSpec(width, height, spacing, 0,
+                false, metrics);
         mSizeChoice = 2;
     }
 
@@ -132,9 +149,8 @@ public class GridViewSpecial extends ViewGroup {
     private DrawAdapter mDrawAdapter = null;
     private ArrayList<? extends GridItem> mAllImages;
     private int mSizeChoice = 1;  // default is big cell size
-    private boolean mFlexWidth = false;
     private boolean mDrawEmptyStateOutline = true;
-    private int mItemBackgroundColor = Color.rgb(0xDD, 0xDD, 0xDD);
+    private int mItemBackgroundColor = Color.TRANSPARENT;
 
     // These are set in onLayout().
     private LayoutSpec mSpec;
@@ -218,10 +234,6 @@ public class GridViewSpecial extends ViewGroup {
         Assert(mRunning == false);
         if (mSizeChoice == choice) return;
         mSizeChoice = choice;
-    }
-
-    public void setFlexWidth(boolean bool) {
-        mFlexWidth = bool;
     }
 
     public void setDrawEmptyStateOutline(boolean bool) {
@@ -315,7 +327,7 @@ public class GridViewSpecial extends ViewGroup {
         mColumns = 1 + (width - mSpec.mCellWidth)
                 / (mSpec.mCellWidth + mSpec.mCellSpacing);
 
-        if(mFlexWidth) {
+        if(mSpec.mPaddingPriority) {
             mSpec.mCellWidth = mSpec.mCellHeight = (width
                     - ((mColumns + 1) * mSpec.mCellSpacing)) / mColumns;
         }

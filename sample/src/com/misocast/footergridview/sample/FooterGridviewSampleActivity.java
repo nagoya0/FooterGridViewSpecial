@@ -32,6 +32,7 @@ import android.os.Bundle;
 import android.view.ContextMenu;
 import android.view.ContextMenu.ContextMenuInfo;
 import android.view.LayoutInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.Toast;
@@ -105,12 +106,20 @@ public class FooterGridviewSampleActivity extends Activity implements
             case R.id.grid:
                 int currentSelection = mGvs.getCurrentSelection();
                 if(currentSelection > GridViewSpecial.INDEX_NONE) {
-                    Toast.makeText(FooterGridviewSampleActivity.this,
-                            "onCreateContextMenu(index=" + currentSelection + ")",
-                            Toast.LENGTH_SHORT).show();
+                    menu.setHeaderTitle("ContextMenu Test");
+                    menu.add("menu");
                 }
                 break;
         }
+    }
+
+    @Override
+    public boolean onContextItemSelected(MenuItem item) {
+        int currentSelection = mGvs.getCurrentSelection();
+        Toast.makeText(FooterGridviewSampleActivity.this,
+                "onContextItemSelected(index=" + currentSelection + ")",
+                Toast.LENGTH_SHORT).show();
+        return true;
     }
 
     @Override
